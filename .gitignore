@@ -1,0 +1,15 @@
+# Secrets — NEVER commit these
+.secrets
+config.json
+credentials.json
+*_token.json
+.drive_auth.lock
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# OS
+.DS_Store
+Thumbs.db

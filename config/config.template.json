@@ -1,0 +1,31 @@
+{
+  "email": {
+    "address": "YOUR_EMAIL@gmail.com",
+    "display_name": "Your Name",
+    "imap_host": "imap.gmail.com",
+    "imap_port": 993,
+    "smtp_host": "smtp.gmail.com",
+    "smtp_port": 465,
+    "password": ""
+  },
+  "auto_reply": {
+    "enabled": false,
+    "senders": [
+      {
+        "email": "sender@example.com",
+        "template": "Thanks for your message. I'll get back to you soon."
+      }
+    ],
+    "default_template": "Thanks for reaching out. I'll respond shortly."
+  },
+  "calendar": {
+    "enabled": true,
+    "calendars": ["primary"],
+    "default_reminder_minutes": 15
+  },
+  "limits": {
+    "max_emails_list": 50,
+    "max_search_results": 100,
+    "max_calendar_events": 200
+  }
+}
