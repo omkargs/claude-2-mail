@@ -1,0 +1,23 @@
+{
+  "name": "claude-2-mail-drive",
+  "version": "0.1.0",
+  "description": "Local MCP server for Google Drive (bonus easter egg)",
+  "homepage": "https://github.com/omkargs/claude-2-mail",
+  "command": "python",
+  "args": ["drive_mcp.py"],
+  "env": {
+    "DRIVE_CONFIG_DIR": "{{DRIVE_CONFIG_DIR}}"
+  },
+  "tools": [
+    "drive_list",
+    "drive_search",
+    "drive_read",
+    "drive_download",
+    "drive_upload",
+    "drive_create",
+    "drive_move",
+    "drive_share",
+    "drive_permissions",
+    "drive_trash"
+  ]
+}

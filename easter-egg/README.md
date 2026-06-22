@@ -25,10 +25,6 @@ Bonus MCP server for Google Drive. List, read, upload, download, search, share â
 
 ## Setup
 
-### Auth Pipeline (Overview)
-
-Drive uses **Google OAuth2** â€” a browser-based consent flow that saves a token file. One-time setup, then it auto-refreshes.
-
 ### 1. Install Dependencies
 
 ```bash
@@ -74,7 +70,7 @@ Follow these steps **in order**:
 mkdir -p ~/.config/claude-2-mail
 
 # If you already set up gmail-calendar MCP, you can reuse the same
-# credentials.json and config directory. Just copy the template:
+# credentials.json and config directory.
 cp config/credentials.json.template ~/.config/claude-2-mail/credentials.json
 ```
 
@@ -123,6 +119,7 @@ Does NOT request full Drive access.
 | `Token expired` | Delete `drive_token.json`, re-auth. |
 | `File not found` | Use file_id from `drive_list`, not the share link. |
 | `Destination must be under home or /tmp` | Downloads only allowed to home or /tmp paths. |
+| `CredentialsWithRegionalAccessBoundary.refresh() missing argument` | Update google-auth: `pip install --upgrade google-auth` |
 | Missing pip libs | `pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib` |
 
 ## Security

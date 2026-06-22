@@ -1,7 +1,9 @@
 {
   "type": "mcp-server",
   "name": "claude-2-mail",
-  "description": "Local MCP servers for Gmail, Google Calendar, and Google Drive",
+  "version": "0.1.0",
+  "description": "Local MCP server for Gmail and Google Calendar",
+  "homepage": "https://github.com/omkargs/claude-2-mail",
   "command": "python",
   "args": ["gmail_calendar_mcp.py"],
   "capabilities": {

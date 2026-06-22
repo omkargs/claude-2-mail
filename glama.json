@@ -6,7 +6,7 @@
     "command": "python",
     "args": ["gmail_calendar_mcp.py"],
     "env": {
-      "GMAIL_MAIL_CONFIG": "$HOME/.config/claude-2-mail/config.json"
+      "GMAIL_MAIL_CONFIG": "~/.config/claude-2-mail/config.json"
     }
   }
 }

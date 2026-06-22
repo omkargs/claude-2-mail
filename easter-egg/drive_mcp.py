@@ -102,7 +102,8 @@ def _get_creds():
 
             if not creds or not creds.valid:
                 if creds and creds.expired and creds.refresh_token:
-                    creds.refresh()
+                    from google.auth.transport.requests import Request
+                    creds.refresh(Request())
                 else:
                     if not CREDS_PATH.exists():
                         raise FileNotFoundError(

@@ -151,6 +151,7 @@ First Calendar use opens a browser for OAuth approval. One-time — token saves 
 | `access_blocked` (OAuth) | Add your email as Test user in OAuth consent screen. |
 | `Token expired` | Delete `calendar_token.json`, re-auth. |
 | `Config not found` | Check `GMAIL_MAIL_CONFIG` env var path. |
+| `CredentialsWithRegionalAccessBoundary.refresh() missing argument` | Update google-auth: `pip install --upgrade google-auth` |
 | Missing pip libs | `pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib` |
 
 ## Security

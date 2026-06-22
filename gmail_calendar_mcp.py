@@ -71,13 +71,25 @@ log.setLevel(logging.INFO)
 
 def load_config() -> dict:
     if not CONFIG_PATH.exists():
-        raise FileNotFoundError(f"Config not found: {CONFIG_PATH}")
+        raise FileNotFoundError(
+            f"Config not found at {CONFIG_PATH}\n\n"
+            "Fix: Copy template and configure:\n"
+            f"  mkdir -p $(dirname {CONFIG_PATH})\n"
+            f"  cp /path/to/claude-2-mail/config/config.template.json {CONFIG_PATH}\n"
+            f"  nano {CONFIG_PATH}\n"
+        )
     with open(CONFIG_PATH) as f:
         cfg = json.load(f)
-    # Password from env var (preferred) or config file (fallback)
     env_password = os.environ.get("GMAIL_APP_PASSWORD", "")
-    if env_password:
-        cfg["email"]["password"] = env_password
+    if not env_password:
+        raise EnvironmentError(
+            "GMAIL_APP_PASSWORD env var not set.\n\n"
+            "Fix: Add to your shell profile (~/.bashrc or ~/.zshrc):\n"
+            "  export GMAIL_APP_PASSWORD='your-16-char-app-password'\n\n"
+            "Get yours at: https://myaccount.google.com/apppasswords\n"
+            "(Requires 2-Step Verification enabled)\n"
+        )
+    cfg["email"]["password"] = env_password
     return cfg
 
 
@@ -266,7 +278,8 @@ def _get_calendar_service(cfg: dict):
 
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh()
+            from google.auth.transport.requests import Request
+            creds.refresh(Request())
         else:
             if not creds_path.exists():
                 raise FileNotFoundError(

@@ -1,12 +1,12 @@
 {
+  "_comment": "Copy this to ~/.config/claude-2-mail/config.json and fill in your values. Password is NOT stored here — set GMAIL_APP_PASSWORD in ~/.config/claude-2-mail/.secrets",
   "email": {
     "address": "YOUR_EMAIL@gmail.com",
     "display_name": "Your Name",
     "imap_host": "imap.gmail.com",
     "imap_port": 993,
     "smtp_host": "smtp.gmail.com",
-    "smtp_port": 465,
-    "password": ""
+    "smtp_port": 465
   },
   "auto_reply": {
     "enabled": false,
@@ -22,6 +22,10 @@
     "enabled": true,
     "calendars": ["primary"],
     "default_reminder_minutes": 15
+  },
+  "drive": {
+    "enabled": true,
+    "config_dir": "~/.config/claude-2-mail"
   },
   "limits": {
     "max_emails_list": 50,
