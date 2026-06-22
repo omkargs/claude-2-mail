@@ -1,0 +1,12 @@
+{
+  "name": "claude-2-mail",
+  "description": "Google Workspace MCP — Gmail + Calendar + Drive",
+  "url": "https://github.com/omkargs/claude-2-mail",
+  "install": {
+    "command": "python",
+    "args": ["gmail_calendar_mcp.py"],
+    "env": {
+      "GMAIL_MAIL_CONFIG": "$HOME/.config/claude-2-mail/config.json"
+    }
+  }
+}

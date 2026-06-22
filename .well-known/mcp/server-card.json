@@ -1,0 +1,20 @@
+{
+  "type": "mcp-server",
+  "name": "claude-2-mail",
+  "description": "Local MCP servers for Gmail, Google Calendar, and Google Drive",
+  "command": "python",
+  "args": ["gmail_calendar_mcp.py"],
+  "capabilities": {
+    "tools": [
+      "mail_list",
+      "mail_read",
+      "mail_search",
+      "mail_draft",
+      "mail_send",
+      "mail_auto_reply",
+      "calendar_list",
+      "calendar_create",
+      "calendar_update"
+    ]
+  }
+}
