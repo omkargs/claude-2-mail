@@ -154,6 +154,13 @@ First Calendar use opens a browser for OAuth approval. One-time — token saves 
 | `CredentialsWithRegionalAccessBoundary.refresh() missing argument` | Update google-auth: `pip install --upgrade google-auth` |
 | Missing pip libs | `pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib` |
 
+## Testing
+
+```bash
+pip install -e ".[dev]"
+pytest tests/ -v
+```
+
 ## Security
 
 - App Password in `.secrets` (chmod 600), NOT in config.json or shell rc
