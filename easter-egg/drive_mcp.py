@@ -30,7 +30,6 @@ import os
 import re
 import fcntl
 from pathlib import Path
-from typing import Any
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
