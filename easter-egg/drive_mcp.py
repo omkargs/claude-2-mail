@@ -39,13 +39,14 @@ from mcp.types import TextContent, Tool
 
 class _RedactFormatter(logging.Formatter):
     """Redact sensitive data (emails, tokens, passwords) from log output."""
-    _email_re = re.compile(r'[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}')
+
+    _email_re = re.compile(r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}")
     _token_re = re.compile(r'(token|password|secret|key)["\s:=]+["\']?([^\s"\'&]+)', re.IGNORECASE)
 
     def format(self, record: logging.LogRecord) -> str:
         msg = super().format(record)
-        msg = self._email_re.sub('[REDACTED_EMAIL]', msg)
-        msg = self._token_re.sub(r'\1=[REDACTED]', msg)
+        msg = self._email_re.sub("[REDACTED_EMAIL]", msg)
+        msg = self._token_re.sub(r"\1=[REDACTED]", msg)
         return msg
 
 
@@ -79,6 +80,7 @@ try:
     from googleapiclient.discovery import build as gbuild
     from google_auth_oauthlib.flow import InstalledAppFlow
     from googleapiclient.http import MediaIoBaseDownload, MediaFileUpload
+
     GOOGLE_LIBS = True
 except ImportError:
     GOOGLE_LIBS = False
@@ -103,6 +105,7 @@ def _get_creds():
             if not creds or not creds.valid:
                 if creds and creds.expired and creds.refresh_token:
                     from google.auth.transport.requests import Request
+
                     creds.refresh(Request())
                 else:
                     if not CREDS_PATH.exists():
@@ -135,9 +138,10 @@ def get_sheets_service():
 # Validation helpers
 # ---------------------------------------------------------------------------
 
+
 def _validate_email(email: str) -> bool:
     """Basic email format validation."""
-    return bool(re.match(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$', email))
+    return bool(re.match(r"^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$", email))
 
 
 def _validate_dest_path(dest: str) -> Path:
@@ -190,11 +194,29 @@ async def list_tools():
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "folder_id": {"type": "string", "description": "Parent folder ID (default: root)", "default": "root"},
-                    "query": {"type": "string", "description": "Search query (e.g. 'name contains \"report\"')"},
-                    "file_type": {"type": "string", "description": "Filter by type: folder, document, sheet, pdf, image, etc."},
-                    "page_size": {"type": "integer", "description": "Max results (default: 50, max: 100)", "default": 50},
-                    "order_by": {"type": "string", "description": "Sort order: 'name', 'modifiedTime desc', 'createdTime desc'", "default": "name"},
+                    "folder_id": {
+                        "type": "string",
+                        "description": "Parent folder ID (default: root)",
+                        "default": "root",
+                    },
+                    "query": {
+                        "type": "string",
+                        "description": "Search query (e.g. 'name contains \"report\"')",
+                    },
+                    "file_type": {
+                        "type": "string",
+                        "description": "Filter by type: folder, document, sheet, pdf, image, etc.",
+                    },
+                    "page_size": {
+                        "type": "integer",
+                        "description": "Max results (default: 50, max: 100)",
+                        "default": 50,
+                    },
+                    "order_by": {
+                        "type": "string",
+                        "description": "Sort order: 'name', 'modifiedTime desc', 'createdTime desc'",
+                        "default": "name",
+                    },
                 },
             },
         ),
@@ -204,10 +226,23 @@ async def list_tools():
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "query": {"type": "string", "description": "Search text (matches name and content)"},
-                    "file_type": {"type": "string", "description": "Filter by type: document, sheet, pdf, folder, image, video"},
-                    "folder_id": {"type": "string", "description": "Search within this folder only"},
-                    "page_size": {"type": "integer", "description": "Max results (default: 20)", "default": 20},
+                    "query": {
+                        "type": "string",
+                        "description": "Search text (matches name and content)",
+                    },
+                    "file_type": {
+                        "type": "string",
+                        "description": "Filter by type: document, sheet, pdf, folder, image, video",
+                    },
+                    "folder_id": {
+                        "type": "string",
+                        "description": "Search within this folder only",
+                    },
+                    "page_size": {
+                        "type": "integer",
+                        "description": "Max results (default: 20)",
+                        "default": 20,
+                    },
                 },
                 "required": ["query"],
             },
@@ -219,7 +254,10 @@ async def list_tools():
                 "type": "object",
                 "properties": {
                     "file_id": {"type": "string", "description": "Google Drive file ID"},
-                    "file_name": {"type": "string", "description": "File name (alternative to file_id, searches by name)"},
+                    "file_name": {
+                        "type": "string",
+                        "description": "File name (alternative to file_id, searches by name)",
+                    },
                 },
             },
         ),
@@ -230,7 +268,10 @@ async def list_tools():
                 "type": "object",
                 "properties": {
                     "file_id": {"type": "string", "description": "Google Drive file ID"},
-                    "destination": {"type": "string", "description": "Local file path (default: ~/Downloads/FILENAME)"},
+                    "destination": {
+                        "type": "string",
+                        "description": "Local file path (default: ~/Downloads/FILENAME)",
+                    },
                 },
                 "required": ["file_id"],
             },
@@ -242,9 +283,20 @@ async def list_tools():
                 "type": "object",
                 "properties": {
                     "file_path": {"type": "string", "description": "Local file path to upload"},
-                    "file_name": {"type": "string", "description": "Name in Drive (default: same as local file)"},
-                    "folder_id": {"type": "string", "description": "Destination folder ID (default: root)", "default": "root"},
-                    "convert_to_google": {"type": "boolean", "description": "Convert to Google Docs format (for .txt, .md, .docx)", "default": False},
+                    "file_name": {
+                        "type": "string",
+                        "description": "Name in Drive (default: same as local file)",
+                    },
+                    "folder_id": {
+                        "type": "string",
+                        "description": "Destination folder ID (default: root)",
+                        "default": "root",
+                    },
+                    "convert_to_google": {
+                        "type": "boolean",
+                        "description": "Convert to Google Docs format (for .txt, .md, .docx)",
+                        "default": False,
+                    },
                 },
                 "required": ["file_path"],
             },
@@ -256,9 +308,20 @@ async def list_tools():
                 "type": "object",
                 "properties": {
                     "name": {"type": "string", "description": "Name of the new file/folder"},
-                    "type": {"type": "string", "description": "Type: document, sheet, folder (default: folder)", "default": "folder"},
-                    "folder_id": {"type": "string", "description": "Parent folder ID (default: root)", "default": "root"},
-                    "content": {"type": "string", "description": "Initial content (for documents only)"},
+                    "type": {
+                        "type": "string",
+                        "description": "Type: document, sheet, folder (default: folder)",
+                        "default": "folder",
+                    },
+                    "folder_id": {
+                        "type": "string",
+                        "description": "Parent folder ID (default: root)",
+                        "default": "root",
+                    },
+                    "content": {
+                        "type": "string",
+                        "description": "Initial content (for documents only)",
+                    },
                 },
                 "required": ["name"],
             },
@@ -271,7 +334,11 @@ async def list_tools():
                 "properties": {
                     "file_id": {"type": "string", "description": "File ID to move"},
                     "folder_id": {"type": "string", "description": "Destination folder ID"},
-                    "remove_from_all": {"type": "boolean", "description": "DANGEROUS: Remove from all other parents (default: false)", "default": False},
+                    "remove_from_all": {
+                        "type": "boolean",
+                        "description": "DANGEROUS: Remove from all other parents (default: false)",
+                        "default": False,
+                    },
                 },
                 "required": ["file_id", "folder_id"],
             },
@@ -284,9 +351,20 @@ async def list_tools():
                 "properties": {
                     "file_id": {"type": "string", "description": "File ID to share"},
                     "email": {"type": "string", "description": "Email address to share with"},
-                    "role": {"type": "string", "description": "Permission: reader, commenter, writer (default: reader)", "default": "reader"},
-                    "notify": {"type": "boolean", "description": "Send notification email (default: true)", "default": True},
-                    "message": {"type": "string", "description": "Custom message in notification email"},
+                    "role": {
+                        "type": "string",
+                        "description": "Permission: reader, commenter, writer (default: reader)",
+                        "default": "reader",
+                    },
+                    "notify": {
+                        "type": "boolean",
+                        "description": "Send notification email (default: true)",
+                        "default": True,
+                    },
+                    "message": {
+                        "type": "string",
+                        "description": "Custom message in notification email",
+                    },
                 },
                 "required": ["file_id", "email"],
             },
@@ -298,7 +376,10 @@ async def list_tools():
                 "type": "object",
                 "properties": {
                     "file_id": {"type": "string", "description": "File ID"},
-                    "revoke_email": {"type": "string", "description": "Revoke access for this email (optional)"},
+                    "revoke_email": {
+                        "type": "string",
+                        "description": "Revoke access for this email (optional)",
+                    },
                 },
                 "required": ["file_id"],
             },
@@ -340,12 +421,25 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                     q_parts.append("mimeType = 'application/vnd.google-apps.folder'")
 
             q = " and ".join(q_parts)
-            results = service.files().list(
-                q=q, pageSize=page_size, orderBy=order_by,
-                fields="files(id, name, mimeType, size, modifiedTime, createdTime, parents, webViewLink)"
-            ).execute()
+            results = (
+                service.files()
+                .list(
+                    q=q,
+                    pageSize=page_size,
+                    orderBy=order_by,
+                    fields="files(id, name, mimeType, size, modifiedTime, createdTime, parents, webViewLink)",
+                )
+                .execute()
+            )
             files = results.get("files", [])
-            return [TextContent(type="text", text=json.dumps({"status": "ok", "files": files, "count": len(files)}, indent=2))]
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {"status": "ok", "files": files, "count": len(files)}, indent=2
+                    ),
+                )
+            ]
 
         # ---- DRIVE SEARCH ----
         elif name == "drive_search":
@@ -364,12 +458,24 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                 q_parts.append(f"'{folder_id}' in parents")
 
             q = " and ".join(q_parts)
-            results = service.files().list(
-                q=q, pageSize=page_size,
-                fields="files(id, name, mimeType, size, modifiedTime, webViewLink)"
-            ).execute()
+            results = (
+                service.files()
+                .list(
+                    q=q,
+                    pageSize=page_size,
+                    fields="files(id, name, mimeType, size, modifiedTime, webViewLink)",
+                )
+                .execute()
+            )
             files = results.get("files", [])
-            return [TextContent(type="text", text=json.dumps({"status": "ok", "files": files, "count": len(files)}, indent=2))]
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {"status": "ok", "files": files, "count": len(files)}, indent=2
+                    ),
+                )
+            ]
 
         # ---- DRIVE READ ----
         elif name == "drive_read":
@@ -379,13 +485,26 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             service = get_drive_service()
 
             if not file_id and file_name:
-                results = service.files().list(
-                    q=f"name = '{file_name}' and trashed = false",
-                    pageSize=1, fields="files(id, name, mimeType)"
-                ).execute()
+                results = (
+                    service.files()
+                    .list(
+                        q=f"name = '{file_name}' and trashed = false",
+                        pageSize=1,
+                        fields="files(id, name, mimeType)",
+                    )
+                    .execute()
+                )
                 items = results.get("files", [])
                 if not items:
-                    return [TextContent(type="text", text=json.dumps({"status": "error", "message": f"File not found: {file_name}"}, indent=2))]
+                    return [
+                        TextContent(
+                            type="text",
+                            text=json.dumps(
+                                {"status": "error", "message": f"File not found: {file_name}"},
+                                indent=2,
+                            ),
+                        )
+                    ]
                 file_id = items[0]["id"]
                 mime = items[0]["mimeType"]
             else:
@@ -402,7 +521,14 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                             if "textRun" in run:
                                 content.append(run["textRun"].get("content", ""))
                 text = "".join(content)
-                return [TextContent(type="text", text=json.dumps({"status": "ok", "content": text, "file_id": file_id}, indent=2))]
+                return [
+                    TextContent(
+                        type="text",
+                        text=json.dumps(
+                            {"status": "ok", "content": text, "file_id": file_id}, indent=2
+                        ),
+                    )
+                ]
 
             elif mime == "application/vnd.google-apps.spreadsheet":
                 sheets = get_sheets_service()
@@ -410,15 +536,25 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                 all_rows = []
                 for sheet in spreadsheet.get("sheets", []):
                     title = sheet["properties"]["title"]
-                    result = sheets.spreadsheets().values().get(
-                        spreadsheetId=file_id, range=title
-                    ).execute()
+                    result = (
+                        sheets.spreadsheets()
+                        .values()
+                        .get(spreadsheetId=file_id, range=title)
+                        .execute()
+                    )
                     values = result.get("values", [])
                     all_rows.append(f"## {title}")
                     for row in values:
                         all_rows.append(", ".join(str(c) for c in row))
                 text = "\n".join(all_rows)
-                return [TextContent(type="text", text=json.dumps({"status": "ok", "content": text, "file_id": file_id}, indent=2))]
+                return [
+                    TextContent(
+                        type="text",
+                        text=json.dumps(
+                            {"status": "ok", "content": text, "file_id": file_id}, indent=2
+                        ),
+                    )
+                ]
 
             else:
                 request = service.files().get_media(fileId=file_id)
@@ -432,7 +568,20 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                     text = content.decode("utf-8")
                 except UnicodeDecodeError:
                     text = f"[Binary file, {len(content)} bytes]"
-                return [TextContent(type="text", text=json.dumps({"status": "ok", "content": text, "file_id": file_id, "size": len(content)}, indent=2))]
+                return [
+                    TextContent(
+                        type="text",
+                        text=json.dumps(
+                            {
+                                "status": "ok",
+                                "content": text,
+                                "file_id": file_id,
+                                "size": len(content),
+                            },
+                            indent=2,
+                        ),
+                    )
+                ]
 
         # ---- DRIVE DOWNLOAD ----
         elif name == "drive_download":
@@ -463,13 +612,32 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                 while not done:
                     _, done = downloader.next_chunk()
 
-            return [TextContent(type="text", text=json.dumps({"status": "ok", "downloaded_to": str(dest_path), "file_name": meta["name"]}, indent=2))]
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {
+                            "status": "ok",
+                            "downloaded_to": str(dest_path),
+                            "file_name": meta["name"],
+                        },
+                        indent=2,
+                    ),
+                )
+            ]
 
         # ---- DRIVE UPLOAD ----
         elif name == "drive_upload":
             file_path = Path(arguments["file_path"]).expanduser()
             if not file_path.exists():
-                return [TextContent(type="text", text=json.dumps({"status": "error", "message": f"File not found: {file_path}"}, indent=2))]
+                return [
+                    TextContent(
+                        type="text",
+                        text=json.dumps(
+                            {"status": "error", "message": f"File not found: {file_path}"}, indent=2
+                        ),
+                    )
+                ]
 
             file_name = arguments.get("file_name", file_path.name)
             folder_id = arguments.get("folder_id", "root")
@@ -481,16 +649,25 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
 
             file_metadata = {"name": file_name, "parents": [folder_id]}
 
-            if convert and mime_type in ("text/plain", "text/markdown", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"):
+            if convert and mime_type in (
+                "text/plain",
+                "text/markdown",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            ):
                 file_metadata["mimeType"] = "application/vnd.google-apps.document"
 
             media = MediaFileUpload(str(file_path), mimetype=mime_type, resumable=True)
-            uploaded = service.files().create(
-                body=file_metadata, media_body=media,
-                fields="id, name, webViewLink"
-            ).execute()
+            uploaded = (
+                service.files()
+                .create(body=file_metadata, media_body=media, fields="id, name, webViewLink")
+                .execute()
+            )
 
-            return [TextContent(type="text", text=json.dumps({"status": "ok", "file": uploaded}, indent=2))]
+            return [
+                TextContent(
+                    type="text", text=json.dumps({"status": "ok", "file": uploaded}, indent=2)
+                )
+            ]
 
         # ---- DRIVE CREATE ----
         elif name == "drive_create":
@@ -503,16 +680,24 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             mime = MIME_TYPE_MAP.get(type_val.lower(), "application/vnd.google-apps.folder")
 
             file_metadata = {"name": name_val, "mimeType": mime, "parents": [folder_id]}
-            created = service.files().create(body=file_metadata, fields="id, name, webViewLink").execute()
+            created = (
+                service.files().create(body=file_metadata, fields="id, name, webViewLink").execute()
+            )
 
             if mime == "application/vnd.google-apps.document" and content:
                 docs = get_docs_service()
                 docs.documents().batchUpdate(
                     documentId=created["id"],
-                    body={"requests": [{"insertText": {"location": {"index": 1}, "text": content}}]}
+                    body={
+                        "requests": [{"insertText": {"location": {"index": 1}, "text": content}}]
+                    },
                 ).execute()
 
-            return [TextContent(type="text", text=json.dumps({"status": "ok", "file": created}, indent=2))]
+            return [
+                TextContent(
+                    type="text", text=json.dumps({"status": "ok", "file": created}, indent=2)
+                )
+            ]
 
         # ---- DRIVE MOVE ----
         elif name == "drive_move":
@@ -525,10 +710,20 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             prev_parents = ",".join(meta.get("parents", [])) if not remove_all else ""
 
             service.files().update(
-                fileId=file_id, addParents=folder_id, removeParents=prev_parents, fields="id, parents"
+                fileId=file_id,
+                addParents=folder_id,
+                removeParents=prev_parents,
+                fields="id, parents",
             ).execute()
 
-            return [TextContent(type="text", text=json.dumps({"status": "ok", "moved": file_id, "to_folder": folder_id}, indent=2))]
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {"status": "ok", "moved": file_id, "to_folder": folder_id}, indent=2
+                    ),
+                )
+            ]
 
         # ---- DRIVE SHARE ----
         elif name == "drive_share":
@@ -539,17 +734,34 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             message = arguments.get("message", "")
 
             if not _validate_email(email):
-                return [TextContent(type="text", text=json.dumps({"status": "error", "message": f"Invalid email: {email}"}, indent=2))]
+                return [
+                    TextContent(
+                        type="text",
+                        text=json.dumps(
+                            {"status": "error", "message": f"Invalid email: {email}"}, indent=2
+                        ),
+                    )
+                ]
 
             service = get_drive_service()
             permission = {"type": "user", "role": role, "emailAddress": email}
-            result = service.permissions().create(
-                fileId=file_id, body=permission,
-                sendNotificationEmail=notify, emailMessage=message or None,
-                fields="id, role, emailAddress"
-            ).execute()
+            result = (
+                service.permissions()
+                .create(
+                    fileId=file_id,
+                    body=permission,
+                    sendNotificationEmail=notify,
+                    emailMessage=message or None,
+                    fields="id, role, emailAddress",
+                )
+                .execute()
+            )
 
-            return [TextContent(type="text", text=json.dumps({"status": "ok", "permission": result}, indent=2))]
+            return [
+                TextContent(
+                    type="text", text=json.dumps({"status": "ok", "permission": result}, indent=2)
+                )
+            ]
 
         # ---- DRIVE PERMISSIONS ----
         elif name == "drive_permissions":
@@ -560,31 +772,73 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
 
             if revoke_email:
                 if not _validate_email(revoke_email):
-                    return [TextContent(type="text", text=json.dumps({"status": "error", "message": f"Invalid email: {revoke_email}"}, indent=2))]
-                perms = service.permissions().list(fileId=file_id, fields="permissions(id, emailAddress, role)").execute()
+                    return [
+                        TextContent(
+                            type="text",
+                            text=json.dumps(
+                                {"status": "error", "message": f"Invalid email: {revoke_email}"},
+                                indent=2,
+                            ),
+                        )
+                    ]
+                perms = (
+                    service.permissions()
+                    .list(fileId=file_id, fields="permissions(id, emailAddress, role)")
+                    .execute()
+                )
                 revoked = []
                 for p in perms.get("permissions", []):
                     if p.get("emailAddress", "").lower() == revoke_email.lower():
                         service.permissions().delete(fileId=file_id, permissionId=p["id"]).execute()
                         revoked.append(p["id"])
-                return [TextContent(type="text", text=json.dumps({"status": "ok", "revoked": revoked}, indent=2))]
+                return [
+                    TextContent(
+                        type="text", text=json.dumps({"status": "ok", "revoked": revoked}, indent=2)
+                    )
+                ]
 
-            perms = service.permissions().list(fileId=file_id, fields="permissions(id, emailAddress, role, type)").execute()
-            return [TextContent(type="text", text=json.dumps({"status": "ok", "permissions": perms.get("permissions", [])}, indent=2))]
+            perms = (
+                service.permissions()
+                .list(fileId=file_id, fields="permissions(id, emailAddress, role, type)")
+                .execute()
+            )
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {"status": "ok", "permissions": perms.get("permissions", [])}, indent=2
+                    ),
+                )
+            ]
 
         # ---- DRIVE TRASH ----
         elif name == "drive_trash":
             file_id = arguments["file_id"]
             service = get_drive_service()
             service.files().update(fileId=file_id, body={"trashed": True}).execute()
-            return [TextContent(type="text", text=json.dumps({"status": "ok", "trashed": file_id}, indent=2))]
+            return [
+                TextContent(
+                    type="text", text=json.dumps({"status": "ok", "trashed": file_id}, indent=2)
+                )
+            ]
 
         else:
-            return [TextContent(type="text", text=json.dumps({"status": "error", "message": f"Unknown tool: {name}"}, indent=2))]
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {"status": "error", "message": f"Unknown tool: {name}"}, indent=2
+                    ),
+                )
+            ]
 
     except Exception as e:
         log.exception("Tool call failed: %s", name)
-        return [TextContent(type="text", text=json.dumps({"status": "error", "message": str(e)}, indent=2))]
+        return [
+            TextContent(
+                type="text", text=json.dumps({"status": "error", "message": str(e)}, indent=2)
+            )
+        ]
 
 
 async def main():
@@ -596,6 +850,7 @@ async def main():
 def main_sync():
     """Synchronous entry point for pip/pipx/uvx."""
     asyncio.run(main())
+
 
 if __name__ == "__main__":
     main_sync()

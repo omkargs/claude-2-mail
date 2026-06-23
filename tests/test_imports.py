@@ -15,9 +15,8 @@ def test_drive_imports():
     """Drive MCP module imports successfully."""
     # easter-egg directory uses hyphen, so import via importlib
     import importlib.util
-    spec = importlib.util.spec_from_file_location(
-        "drive_mcp", "easter-egg/drive_mcp.py"
-    )
+
+    spec = importlib.util.spec_from_file_location("drive_mcp", "easter-egg/drive_mcp.py")
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     assert hasattr(mod, "main_sync")

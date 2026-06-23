@@ -52,13 +52,14 @@ CONFIG_PATH = Path(
 
 class _RedactFormatter(logging.Formatter):
     """Redact sensitive data (emails, tokens, passwords) from log output."""
-    _email_re = re.compile(r'[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}')
+
+    _email_re = re.compile(r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}")
     _token_re = re.compile(r'(token|password|secret|key)["\s:=]+["\']?([^\s"\'&]+)', re.IGNORECASE)
 
     def format(self, record: logging.LogRecord) -> str:
         msg = super().format(record)
-        msg = self._email_re.sub('[REDACTED_EMAIL]', msg)
-        msg = self._token_re.sub(r'\1=[REDACTED]', msg)
+        msg = self._email_re.sub("[REDACTED_EMAIL]", msg)
+        msg = self._token_re.sub(r"\1=[REDACTED]", msg)
         return msg
 
 
@@ -162,9 +163,14 @@ def _imap_escape(value: str) -> str:
     return value.replace('"', '\\"')
 
 
-def build_search_query(sender: str | None = None, subject: str | None = None,
-                       body: str | None = None, since: str | None = None,
-                       before: str | None = None, unread_only: bool = False) -> str:
+def build_search_query(
+    sender: str | None = None,
+    subject: str | None = None,
+    body: str | None = None,
+    since: str | None = None,
+    before: str | None = None,
+    unread_only: bool = False,
+) -> str:
     """Build IMAP search criteria string."""
     parts = []
     if unread_only:
@@ -189,10 +195,13 @@ def build_search_query(sender: str | None = None, subject: str | None = None,
 # ---------------------------------------------------------------------------
 
 
-def smtp_send(cfg: dict, to: str, subject: str, body: str,
-              reply_to_msg_id: str | None = None) -> dict:
+def smtp_send(
+    cfg: dict, to: str, subject: str, body: str, reply_to_msg_id: str | None = None
+) -> dict:
     ctx = ssl.create_default_context()
-    with smtplib.SMTP_SSL(cfg["email"]["smtp_host"], cfg["email"]["smtp_port"], context=ctx) as smtp:
+    with smtplib.SMTP_SSL(
+        cfg["email"]["smtp_host"], cfg["email"]["smtp_port"], context=ctx
+    ) as smtp:
         smtp.login(cfg["email"]["address"], cfg["email"]["password"])
 
         msg = MIMEMultipart()
@@ -206,7 +215,12 @@ def smtp_send(cfg: dict, to: str, subject: str, body: str,
 
         smtp.send_message(msg)
 
-    return {"status": "sent", "to": to, "subject": subject, "timestamp": datetime.now(timezone.utc).isoformat()}
+    return {
+        "status": "sent",
+        "to": to,
+        "subject": subject,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -237,7 +251,7 @@ def store_draft(to: str, subject: str, body: str, reply_uid: str | None = None) 
 def is_whitelisted(cfg: dict, sender_email: str) -> dict | None:
     """Check if sender is in auto-reply whitelist. Returns sender config or None."""
     senders = cfg.get("auto_reply", {}).get("senders", [])
-    match = re.search(r'<([^>]+)>', sender_email)
+    match = re.search(r"<([^>]+)>", sender_email)
     clean = match.group(1).lower() if match else sender_email.lower().strip()
     for s in senders:
         if s["email"].lower() == clean:
@@ -253,6 +267,7 @@ try:
     from google.oauth2.credentials import Credentials
     from googleapiclient.discovery import build as gbuild
     from google_auth_oauthlib.flow import InstalledAppFlow
+
     GOOGLE_LIBS = True
 except ImportError:
     GOOGLE_LIBS = False
@@ -272,13 +287,14 @@ def _get_calendar_service(cfg: dict):
 
     creds = None
     if token_path.exists():
-        creds = Credentials.from_authorized_user_file(str(token_path), [
-            "https://www.googleapis.com/auth/calendar"
-        ])
+        creds = Credentials.from_authorized_user_file(
+            str(token_path), ["https://www.googleapis.com/auth/calendar"]
+        )
 
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             from google.auth.transport.requests import Request
+
             creds.refresh(Request())
         else:
             if not creds_path.exists():
@@ -286,9 +302,9 @@ def _get_calendar_service(cfg: dict):
                     f"Google OAuth credentials not found: {creds_path}\n"
                     "Download from Google Cloud Console → APIs & Services → Credentials → OAuth 2.0 → Desktop app"
                 )
-            flow = InstalledAppFlow.from_client_secrets_file(str(creds_path), [
-                "https://www.googleapis.com/auth/calendar"
-            ])
+            flow = InstalledAppFlow.from_client_secrets_file(
+                str(creds_path), ["https://www.googleapis.com/auth/calendar"]
+            )
             creds = flow.run_local_server(port=0)
         with open(token_path, "w") as tf:
             tf.write(creds.to_json())
@@ -312,9 +328,21 @@ async def list_tools():
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "folder": {"type": "string", "description": "IMAP folder (default: INBOX)", "default": "INBOX"},
-                    "count": {"type": "integer", "description": "Max emails to return (default: 20)", "default": 20},
-                    "unread_only": {"type": "boolean", "description": "Only unread emails", "default": False},
+                    "folder": {
+                        "type": "string",
+                        "description": "IMAP folder (default: INBOX)",
+                        "default": "INBOX",
+                    },
+                    "count": {
+                        "type": "integer",
+                        "description": "Max emails to return (default: 20)",
+                        "default": 20,
+                    },
+                    "unread_only": {
+                        "type": "boolean",
+                        "description": "Only unread emails",
+                        "default": False,
+                    },
                 },
             },
         ),
@@ -324,8 +352,15 @@ async def list_tools():
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "uid": {"type": "string", "description": "Email UID from mail_list or mail_search"},
-                    "folder": {"type": "string", "description": "IMAP folder (default: INBOX)", "default": "INBOX"},
+                    "uid": {
+                        "type": "string",
+                        "description": "Email UID from mail_list or mail_search",
+                    },
+                    "folder": {
+                        "type": "string",
+                        "description": "IMAP folder (default: INBOX)",
+                        "default": "INBOX",
+                    },
                 },
                 "required": ["uid"],
             },
@@ -341,9 +376,21 @@ async def list_tools():
                     "body": {"type": "string", "description": "Filter by body text"},
                     "since": {"type": "string", "description": "Since date (YYYY-MM-DD)"},
                     "before": {"type": "string", "description": "Before date (YYYY-MM-DD)"},
-                    "unread_only": {"type": "boolean", "description": "Only unread", "default": False},
-                    "count": {"type": "integer", "description": "Max results (default: 20)", "default": 20},
-                    "folder": {"type": "string", "description": "IMAP folder (default: INBOX)", "default": "INBOX"},
+                    "unread_only": {
+                        "type": "boolean",
+                        "description": "Only unread",
+                        "default": False,
+                    },
+                    "count": {
+                        "type": "integer",
+                        "description": "Max results (default: 20)",
+                        "default": 20,
+                    },
+                    "folder": {
+                        "type": "string",
+                        "description": "IMAP folder (default: INBOX)",
+                        "default": "INBOX",
+                    },
                 },
             },
         ),
@@ -356,8 +403,15 @@ async def list_tools():
                     "to": {"type": "string", "description": "Recipient email"},
                     "subject": {"type": "string", "description": "Email subject"},
                     "body": {"type": "string", "description": "Email body text"},
-                    "reply_uid": {"type": "string", "description": "UID of email being replied to (auto-fills to/subject)"},
-                    "folder": {"type": "string", "description": "Folder for reply lookup (default: INBOX)", "default": "INBOX"},
+                    "reply_uid": {
+                        "type": "string",
+                        "description": "UID of email being replied to (auto-fills to/subject)",
+                    },
+                    "folder": {
+                        "type": "string",
+                        "description": "Folder for reply lookup (default: INBOX)",
+                        "default": "INBOX",
+                    },
                 },
                 "required": ["body"],
             },
@@ -381,8 +435,16 @@ async def list_tools():
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "folder": {"type": "string", "description": "IMAP folder (default: INBOX)", "default": "INBOX"},
-                    "dry_run": {"type": "boolean", "description": "Show what would be replied to without sending", "default": False},
+                    "folder": {
+                        "type": "string",
+                        "description": "IMAP folder (default: INBOX)",
+                        "default": "INBOX",
+                    },
+                    "dry_run": {
+                        "type": "boolean",
+                        "description": "Show what would be replied to without sending",
+                        "default": False,
+                    },
                 },
             },
         ),
@@ -392,9 +454,21 @@ async def list_tools():
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "days": {"type": "integer", "description": "Number of days ahead (default: 7)", "default": 7},
-                    "max_results": {"type": "integer", "description": "Max events (default: 50)", "default": 50},
-                    "calendar_id": {"type": "string", "description": "Calendar ID (default: primary)", "default": "primary"},
+                    "days": {
+                        "type": "integer",
+                        "description": "Number of days ahead (default: 7)",
+                        "default": 7,
+                    },
+                    "max_results": {
+                        "type": "integer",
+                        "description": "Max events (default: 50)",
+                        "default": 50,
+                    },
+                    "calendar_id": {
+                        "type": "string",
+                        "description": "Calendar ID (default: primary)",
+                        "default": "primary",
+                    },
                 },
             },
         ),
@@ -405,12 +479,23 @@ async def list_tools():
                 "type": "object",
                 "properties": {
                     "summary": {"type": "string", "description": "Event title"},
-                    "start": {"type": "string", "description": "Start time (ISO 8601, e.g. 2026-06-22T15:00:00+05:30)"},
+                    "start": {
+                        "type": "string",
+                        "description": "Start time (ISO 8601, e.g. 2026-06-22T15:00:00+05:30)",
+                    },
                     "end": {"type": "string", "description": "End time (ISO 8601)"},
                     "description": {"type": "string", "description": "Event description"},
                     "location": {"type": "string", "description": "Event location"},
-                    "reminder_minutes": {"type": "integer", "description": "Reminder before event in minutes (default: 15)", "default": 15},
-                    "calendar_id": {"type": "string", "description": "Calendar ID (default: primary)", "default": "primary"},
+                    "reminder_minutes": {
+                        "type": "integer",
+                        "description": "Reminder before event in minutes (default: 15)",
+                        "default": 15,
+                    },
+                    "calendar_id": {
+                        "type": "string",
+                        "description": "Calendar ID (default: primary)",
+                        "default": "primary",
+                    },
                 },
                 "required": ["summary", "start", "end"],
             },
@@ -427,8 +512,16 @@ async def list_tools():
                     "end": {"type": "string", "description": "New end time (ISO 8601)"},
                     "description": {"type": "string", "description": "New description"},
                     "location": {"type": "string", "description": "New location"},
-                    "delete": {"type": "boolean", "description": "Delete this event instead of updating", "default": False},
-                    "calendar_id": {"type": "string", "description": "Calendar ID (default: primary)", "default": "primary"},
+                    "delete": {
+                        "type": "boolean",
+                        "description": "Delete this event instead of updating",
+                        "default": False,
+                    },
+                    "calendar_id": {
+                        "type": "string",
+                        "description": "Calendar ID (default: primary)",
+                        "default": "primary",
+                    },
                 },
                 "required": ["event_id"],
             },
@@ -457,12 +550,21 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                 for uid in uids:
                     e = fetch_email(conn, uid)
                     if e:
-                        e["body_preview"] = e["body"][:200] + ("..." if len(e["body"]) > 200 else "")
+                        e["body_preview"] = e["body"][:200] + (
+                            "..." if len(e["body"]) > 200 else ""
+                        )
                         del e["body"]
                         emails.append(e)
             finally:
                 imap_logout(conn)
-            return [TextContent(type="text", text=json.dumps({"status": "ok", "emails": emails, "count": len(emails)}, indent=2))]
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {"status": "ok", "emails": emails, "count": len(emails)}, indent=2
+                    ),
+                )
+            ]
 
         # ---- MAIL READ ----
         elif name == "mail_read":
@@ -475,8 +577,17 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             finally:
                 imap_logout(conn)
             if not e:
-                return [TextContent(type="text", text=json.dumps({"status": "error", "message": f"Email UID {uid} not found"}, indent=2))]
-            return [TextContent(type="text", text=json.dumps({"status": "ok", "email": e}, indent=2))]
+                return [
+                    TextContent(
+                        type="text",
+                        text=json.dumps(
+                            {"status": "error", "message": f"Email UID {uid} not found"}, indent=2
+                        ),
+                    )
+                ]
+            return [
+                TextContent(type="text", text=json.dumps({"status": "ok", "email": e}, indent=2))
+            ]
 
         # ---- MAIL SEARCH ----
         elif name == "mail_search":
@@ -500,12 +611,22 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                 for uid in uids:
                     e = fetch_email(conn, uid)
                     if e:
-                        e["body_preview"] = e["body"][:200] + ("..." if len(e["body"]) > 200 else "")
+                        e["body_preview"] = e["body"][:200] + (
+                            "..." if len(e["body"]) > 200 else ""
+                        )
                         del e["body"]
                         emails.append(e)
             finally:
                 imap_logout(conn)
-            return [TextContent(type="text", text=json.dumps({"status": "ok", "emails": emails, "count": len(emails), "query": query}, indent=2))]
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {"status": "ok", "emails": emails, "count": len(emails), "query": query},
+                        indent=2,
+                    ),
+                )
+            ]
 
         # ---- MAIL DRAFT ----
         elif name == "mail_draft":
@@ -523,7 +644,18 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                 finally:
                     imap_logout(conn)
                 if not original:
-                    return [TextContent(type="text", text=json.dumps({"status": "error", "message": f"Original email UID {reply_uid} not found in {folder}"}, indent=2))]
+                    return [
+                        TextContent(
+                            type="text",
+                            text=json.dumps(
+                                {
+                                    "status": "error",
+                                    "message": f"Original email UID {reply_uid} not found in {folder}",
+                                },
+                                indent=2,
+                            ),
+                        )
+                    ]
                 to = to or original["from"]
                 if not subject:
                     subj = original["subject"]
@@ -531,7 +663,19 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
 
             draft_id = store_draft(to=to, subject=subject, body=body, reply_uid=reply_uid)
             draft = _drafts[draft_id]
-            return [TextContent(type="text", text=json.dumps({"status": "ok", "draft": draft, "message": "Draft created. Show to user for approval, then call mail_send with draft_id."}, indent=2))]
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {
+                            "status": "ok",
+                            "draft": draft,
+                            "message": "Draft created. Show to user for approval, then call mail_send with draft_id.",
+                        },
+                        indent=2,
+                    ),
+                )
+            ]
 
         # ---- MAIL SEND ----
         elif name == "mail_send":
@@ -547,10 +691,29 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                 body = arguments.get("body", "")
 
             if not to:
-                return [TextContent(type="text", text=json.dumps({"status": "error", "message": "No recipient. Provide draft_id or to/subject/body."}, indent=2))]
+                return [
+                    TextContent(
+                        type="text",
+                        text=json.dumps(
+                            {
+                                "status": "error",
+                                "message": "No recipient. Provide draft_id or to/subject/body.",
+                            },
+                            indent=2,
+                        ),
+                    )
+                ]
 
-            if not re.match(r'^[^@]+@[^@]+\.[^@]+$', to):
-                return [TextContent(type="text", text=json.dumps({"status": "error", "message": f"Invalid recipient email: {to}"}, indent=2))]
+            if not re.match(r"^[^@]+@[^@]+\.[^@]+$", to):
+                return [
+                    TextContent(
+                        type="text",
+                        text=json.dumps(
+                            {"status": "error", "message": f"Invalid recipient email: {to}"},
+                            indent=2,
+                        ),
+                    )
+                ]
 
             result = smtp_send(cfg, to, subject, body)
             if draft_id and draft_id in _drafts:
@@ -560,11 +723,25 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         # ---- MAIL AUTO REPLY ----
         elif name == "mail_auto_reply":
             if not cfg.get("auto_reply", {}).get("enabled", False):
-                return [TextContent(type="text", text=json.dumps({"status": "ok", "message": "Auto-reply disabled in config", "replied": []}, indent=2))]
+                return [
+                    TextContent(
+                        type="text",
+                        text=json.dumps(
+                            {
+                                "status": "ok",
+                                "message": "Auto-reply disabled in config",
+                                "replied": [],
+                            },
+                            indent=2,
+                        ),
+                    )
+                ]
 
             folder = arguments.get("folder", "INBOX")
             dry_run = arguments.get("dry_run", False)
-            default_template = cfg.get("auto_reply", {}).get("default_template", "Thanks for reaching out. I'll respond shortly.")
+            default_template = cfg.get("auto_reply", {}).get(
+                "default_template", "Thanks for reaching out. I'll respond shortly."
+            )
             replied = []
 
             conn = imap_connect(cfg)
@@ -578,19 +755,33 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                     sender_cfg = is_whitelisted(cfg, e["from"])
                     if sender_cfg:
                         template = sender_cfg.get("template", default_template)
-                        match = re.search(r'<([^>]+)>', e["from"])
+                        match = re.search(r"<([^>]+)>", e["from"])
                         reply_to = match.group(1) if match else e["from"].strip()
                         subj = e["subject"]
                         reply_subject = subj if subj.startswith("Re: ") else f"Re: {subj}"
 
                         if dry_run:
-                            replied.append({"to": reply_to, "subject": reply_subject, "would_send": template, "dry_run": True})
+                            replied.append(
+                                {
+                                    "to": reply_to,
+                                    "subject": reply_subject,
+                                    "would_send": template,
+                                    "dry_run": True,
+                                }
+                            )
                         else:
                             smtp_send(cfg, reply_to, reply_subject, template)
                             replied.append({"to": reply_to, "subject": reply_subject, "sent": True})
             finally:
                 imap_logout(conn)
-            return [TextContent(type="text", text=json.dumps({"status": "ok", "replied": replied, "count": len(replied)}, indent=2))]
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {"status": "ok", "replied": replied, "count": len(replied)}, indent=2
+                    ),
+                )
+            ]
 
         # ---- CALENDAR LIST ----
         elif name == "calendar_list":
@@ -602,27 +793,40 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             now = datetime.now(timezone.utc).isoformat()
             end = (datetime.now(timezone.utc) + timedelta(days=days)).isoformat()
 
-            events_result = service.events().list(
-                calendarId=calendar_id,
-                timeMin=now,
-                timeMax=end,
-                maxResults=max_results,
-                singleEvents=True,
-                orderBy="startTime",
-            ).execute()
+            events_result = (
+                service.events()
+                .list(
+                    calendarId=calendar_id,
+                    timeMin=now,
+                    timeMax=end,
+                    maxResults=max_results,
+                    singleEvents=True,
+                    orderBy="startTime",
+                )
+                .execute()
+            )
 
             events = events_result.get("items", [])
             formatted = []
             for ev in events:
-                formatted.append({
-                    "id": ev["id"],
-                    "summary": ev.get("summary", "(no title)"),
-                    "start": ev["start"].get("dateTime", ev["start"].get("date")),
-                    "end": ev["end"].get("dateTime", ev["end"].get("date")),
-                    "location": ev.get("location", ""),
-                    "description": ev.get("description", ""),
-                })
-            return [TextContent(type="text", text=json.dumps({"status": "ok", "events": formatted, "count": len(formatted)}, indent=2))]
+                formatted.append(
+                    {
+                        "id": ev["id"],
+                        "summary": ev.get("summary", "(no title)"),
+                        "start": ev["start"].get("dateTime", ev["start"].get("date")),
+                        "end": ev["end"].get("dateTime", ev["end"].get("date")),
+                        "location": ev.get("location", ""),
+                        "description": ev.get("description", ""),
+                    }
+                )
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {"status": "ok", "events": formatted, "count": len(formatted)}, indent=2
+                    ),
+                )
+            ]
 
         # ---- CALENDAR CREATE ----
         elif name == "calendar_create":
@@ -648,7 +852,23 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                 event_body["location"] = arguments["location"]
 
             created = service.events().insert(calendarId=calendar_id, body=event_body).execute()
-            return [TextContent(type="text", text=json.dumps({"status": "ok", "event": {"id": created["id"], "summary": created["summary"], "start": created["start"], "end": created["end"]}}, indent=2))]
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {
+                            "status": "ok",
+                            "event": {
+                                "id": created["id"],
+                                "summary": created["summary"],
+                                "start": created["start"],
+                                "end": created["end"],
+                            },
+                        },
+                        indent=2,
+                    ),
+                )
+            ]
 
         # ---- CALENDAR UPDATE ----
         elif name == "calendar_update":
@@ -658,7 +878,12 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
 
             if arguments.get("delete"):
                 service.events().delete(calendarId=calendar_id, eventId=event_id).execute()
-                return [TextContent(type="text", text=json.dumps({"status": "ok", "deleted": event_id}, indent=2))]
+                return [
+                    TextContent(
+                        type="text",
+                        text=json.dumps({"status": "ok", "deleted": event_id}, indent=2),
+                    )
+                ]
 
             event = service.events().get(calendarId=calendar_id, eventId=event_id).execute()
             if arguments.get("summary"):
@@ -672,15 +897,41 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             if arguments.get("location"):
                 event["location"] = arguments["location"]
 
-            updated = service.events().update(calendarId=calendar_id, eventId=event_id, body=event).execute()
-            return [TextContent(type="text", text=json.dumps({"status": "ok", "event": {"id": updated["id"], "summary": updated["summary"]}}, indent=2))]
+            updated = (
+                service.events()
+                .update(calendarId=calendar_id, eventId=event_id, body=event)
+                .execute()
+            )
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {
+                            "status": "ok",
+                            "event": {"id": updated["id"], "summary": updated["summary"]},
+                        },
+                        indent=2,
+                    ),
+                )
+            ]
 
         else:
-            return [TextContent(type="text", text=json.dumps({"status": "error", "message": f"Unknown tool: {name}"}, indent=2))]
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {"status": "error", "message": f"Unknown tool: {name}"}, indent=2
+                    ),
+                )
+            ]
 
     except Exception as e:
         log.exception("Tool call failed: %s", name)
-        return [TextContent(type="text", text=json.dumps({"status": "error", "message": str(e)}, indent=2))]
+        return [
+            TextContent(
+                type="text", text=json.dumps({"status": "error", "message": str(e)}, indent=2)
+            )
+        ]
 
 
 async def main():
@@ -692,6 +943,7 @@ async def main():
 def main_sync():
     """Synchronous entry point for pip/pipx/uvx."""
     asyncio.run(main())
+
 
 if __name__ == "__main__":
     main_sync()
